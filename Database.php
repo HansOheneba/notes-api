@@ -1,28 +1,24 @@
 <?php
 
-class Database {
-    private $conn;
-    private $config;
+class Database
+{
+    public $connection;
 
-    public function __construct() {
-        $this->config = require __DIR__ . '/config.php';
+    public function __construct($config, $username = 'root', $password = '')
+    {
+        $dsn = 'mysql:' . http_build_query($config, '', ';');
+
+        $this->connection = new PDO($dsn, $username, $password, [
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+        ]);
     }
 
-    public function getConnection() {
-        $this->conn = null;
-        try {
-            $dbConfig = $this->config['database'];
-            
-            $this->conn = new PDO(
-                "mysql:host=" . $dbConfig['host'] . ";port=" . $dbConfig['port'] . ";dbname=" . $dbConfig['dbname'],
-                $dbConfig['username'],
-                $dbConfig['password']
-            );
-            
-            $this->conn->exec("set names " . $dbConfig['charset']);
-        } catch (PDOException $exception) {
-            echo "Connection error: " . $exception->getMessage();
-        }
-        return $this->conn;
+    public function query($query, $params = [])
+    {
+        $statement = $this->connection->prepare($query);
+
+        $statement->execute($params);
+
+        return $statement;
     }
 }
